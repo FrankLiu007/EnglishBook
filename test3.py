@@ -1,12 +1,19 @@
-from docx import Document
-from docx.shared import Pt
+import re
+#----------init high school vocabulary------------------
+def get_high_wordset(path):   ###不处理短语
+    word_set=set()
+    with open(path,'r', encoding='utf-8') as f:
+        lines=f.readlines()
+    r = r'^([a-zA-Z]{1,20})[\s]{1,5}\[.*\]'
+    for line in lines:
+        line=line.replace('[', ' [')
 
-document = Document()
-p = document.add_paragraph()
+        tt= re.findall(r, line)
+        if tt:
+            word_set.add(tt[0])
+            print('tt=', tt)
+    return word_set
 
-run1 = p.add_run('Cities usually have a good reason for being where they are, like')
-run1.font.size = Pt(16)
-run2 = p.add_run('Cities usually have a good reason for being where they are, like')
-run2.font.size = Pt(8)
+path='高中词汇(含短语).txt'
+word_list=get_high_wordset(path)
 
-document.save('test3.docx')
