@@ -131,7 +131,7 @@ def processSentence( sentence,high_wordlist, middle_wordlist ):
 ####-------------------main-------------------
 if __name__=="__main__":
 
-## step1. 读取WordFrequence 生成的json格式的所有单词数据，得到所有的单词频率
+## step1. 读取crawl_dicts 生成的json格式的所有单词数据，得到所有的单词频率
     f=open('all_words.json', 'r', encoding='utf-8')
     import json
     words_all=json.load(f)

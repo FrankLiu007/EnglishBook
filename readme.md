@@ -29,3 +29,13 @@
 > 2. 高频短语和单词，应该都带上例句，这些例句都来自真题。
 >这样学生事实上多次巩固真题的阅读。
 >3. 
+
+##现在项目代码说明
+>1. prepareHigh.py, prepareMiddle.py 生成json格式的初高中词汇表（根据需要
+>可以适当修正）
+>2. WordFrequence.py 读取 高考真题 目录下的所有docx文件，拆出每个单词，
+>并且计算单词的出现频率和提取出例句，最后生成json格式的单词表（all_words.json）
+>3. crawl_dicts.py 读取WordFrequence.py生成的单词表，并从iciba网上爬取注音
+>和解释
+>4. GenEnglishBook.py 读取crawl_dicts.py生成的单词表，读取英文阅读，生成英语书，
+>

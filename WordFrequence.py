@@ -138,16 +138,16 @@ if __name__=="__main__":
         json.dump(words_all, f)
 ###--为所有单词查字典，并保存
 
-
-    from clawer_dicts import get_translation_from_iciba
-    for word in words_all:
-        for cixin in words_all[word]:
-            if cixin=='freqs':
-                continue
-            tr=get_translation_from_iciba(words_all[word][cixin][0])
-            words_all[word][cixin].insert(1, tr)
-        print(words_all[word])
-    #write to file
-    with open('dicts_from_iciba.json', 'w', encoding='utf-8') as f:
-        import json
-        json.dump(words_all, f)
+###暂时注销
+    # from crawl_dicts import get_translation_from_iciba
+    # for word in words_all:
+    #     for cixin in words_all[word]:
+    #         if cixin=='freqs':
+    #             continue
+    #         tr=get_translation_from_iciba(words_all[word][cixin][0])
+    #         words_all[word][cixin].insert(1, tr)
+    #     print(words_all[word])
+    # #write to file
+    # with open('dicts_from_iciba.json', 'w', encoding='utf-8') as f:
+    #     import json
+    #     json.dump(words_all, f)
