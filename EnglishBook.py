@@ -6,7 +6,7 @@ from docx.shared import Pt
 import datetime
 import  difflib
 from pattern import en
-
+from Clawer_tmp import lookup_word_all
 # maxNumber= 60
 #
 # middle_wordList = []
@@ -72,7 +72,7 @@ def get_yinbiao_fanyi( dicts, word):  ##获取音标和翻译
 
     for dic in dicts:
         dictItem = dic[1].get(word , 'no')
-        # print('dictItem=', dictItem)
+        print('dictItem=', dictItem)
         if(dictItem!='no'):
             return pharseDictItem(dic[0] ,dictItem)
 

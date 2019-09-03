@@ -5,7 +5,7 @@ from docx.shared import Pt
 import datetime
 import  difflib
 from pattern import en
-from dicts import get_translation_from_iciba
+# from dicts import get_translation_from_iciba
 # from word_forms.word_forms import get_word_forms
 # maxNumber= 60
 #
