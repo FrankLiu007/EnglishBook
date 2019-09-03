@@ -1,25 +1,16 @@
 
-from pattern import en
 
-def get_sentences(path):
-    with open(path, 'r', encoding='UTF-8') as f :
-        tt=[]
-        for ll in f.readlines():
-            tt.append(ll)
-        contents=''.join(tt)
-        xx=contents.replace('\r', '').replace('\n', '')
-        sentences=xx.split('.')
-        return  sentences
-path='高考英语阅读.txt'
+import re
+import nltk
+from nltk.corpus import wordnet
 
-sentences=get_sentences(path)
-tt=[]
-for sentence in sentences:
-    # paragraphs = processSentence(sentence)
-    # for tt in paragraphs:
-    #     print(tt)
-    # exit()
-    print('sentence:\n', sentence)
-    ll=en.parse(sentence, relations=True, lemmata=True)
-    tt.append(ll)
-    print(ll)
+if not wordnet.synsets('word_to_test'):
+  print('not')
+else:
+    print('yes!')
+f=open('初中词汇.txt', 'r', encoding='utf-8')
+mm=set()
+for line in f.readlines():
+    for word in re.split(r'[．\s\?]', line):
+        if word.isalpha():
+            mm.add(word)

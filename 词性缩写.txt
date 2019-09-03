@@ -33,5 +33,4 @@
 33.     WDT     Wh-determiner 限定词（如关系限定词：whose,which.疑问限定词：what,which,whose.）
 34.     WP      Wh-pronoun 代词（who whose which）
 35.     WP$     Possessive wh-pronoun 所有格代词
-
 36.     WRB     Wh-adverb   疑问代词（how where when）
