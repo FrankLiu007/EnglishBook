@@ -6,7 +6,7 @@ from docx.shared import Pt
 import datetime
 import  difflib
 from pattern import en
-from Clawer_tmp import lookup_word_all
+
 # maxNumber= 60
 #
 # middle_wordList = []

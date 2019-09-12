@@ -46,11 +46,17 @@ if __name__=="__main__":
             for item in ll:
                 words_list.add(item[-1])
         elif is_duanyu:
-            ll = re.findall(r'^\d{1,3}．([a-zA-Z\s]*).*', line)
-            if not ll:
+            dy = re.findall(r'^\d{1,3}．([a-zA-Z\s\(\)/]*).*', line)
+            if not dy:
                 continue
-            for item in ll[0].split():
-                words_list.add(item.lower())
+            print('line=', line,'duanyu=', dy)
+
+            duanyu=dy[0].replace('(', ' ').replace(')', ' ').replace('/', ' ')
+
+            ll = en.parse(duanyu, relations=True, lemmata=True).split()[0]
+            for item in ll:
+                words_list.add(item[-1])
+
 
 ###-write to file to check
     with open('middle.txt', 'w', encoding='utf-8') as f:
@@ -59,8 +65,7 @@ if __name__=="__main__":
             f.write('\n')
 
 ##  write to disk
-    f=open('初中词汇.json', 'w', encoding='utf-8')
-    import json
-    json.dump(list(words_list), f)
-    f.close()
+    with open('初中词汇.json', 'w', encoding='utf-8') as f:
+        import json
+        json.dump(list(words_list), f, sort_keys=True ,indent = 4, separators=(',', ': '))
     print('len(words_list)', len(words_list))

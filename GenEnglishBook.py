@@ -88,25 +88,14 @@ def get_paragraphs(path):
 #  处理一行的数据，可以剥离成处理一个单词的
 
 def processSentence( sentence,high_wordlist, middle_wordlist ):
-    result=dict()
-    result["high"]=set()
-    result["extra"]=set()
-
+    result=set()
     ll = en.parse(sentence, relations=True, lemmata=True)
     print('ll=', ll)
     for word in ll.split()[0]:
-
         if not is_word(word[0]):
             continue
         wd=word[-1]
-
-        if wd in high_wordlist:
-            # xx = get_translation_from_iciba( wd)
-            result["high"].add(wd)
-        else:
-            if not (wd in middle_wordlist):
-                # xx = get_translation_from_iciba( wd)
-                result["extra"].add(wd)
+        result.add(wd)
     return result
 #-------------found better solutions----------------------------------
     # for word in re.split('[.,!?\s]', sentence):

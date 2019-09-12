@@ -63,7 +63,6 @@ if __name__=='__main__':
     outF.close()
 
     word_set=get_high_wordset('outHigh.txt')
-    f=open('高中词汇.json', 'w', encoding='utf-8')
-    import json
-    json.dump(list(word_set),f)
-    f.close()
+    with open('高中词汇.json', 'w', encoding='utf-8') as f:
+        import json
+        json.dump(list(word_set),f)

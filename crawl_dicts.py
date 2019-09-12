@@ -3,8 +3,6 @@ import re
 import bs4
 import threading
 
-
-
 def get_translation_from_iciba(word):
     words_dict = {}
     words_alp = {}
@@ -102,12 +100,10 @@ if __name__ == "__main__":
         t.join()
     print('crawler ends')
 
-
     #write to file
     with open('dicts_from_iciba.json', 'w', encoding='utf-8') as f:
         import json
         json.dump(words_dict, f)
-
 
 
     #multiprocessing的方式
