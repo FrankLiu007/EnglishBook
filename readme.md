@@ -35,7 +35,8 @@
 >可以适当修正）
 >2. WordFrequence.py 读取 高考真题 目录下的所有docx文件，拆出每个单词，
 >并且计算单词的出现频率和提取出例句，最后生成json格式的单词表（all_words.json）
->3. crawl_dicts.py 读取WordFrequence.py生成的单词表，并从iciba网上爬取注音
->和解释
->4. GenEnglishBook.py 读取crawl_dicts.py生成的单词表，读取英文阅读，生成英语书，
->
+>3. crawl_dicts.py 读取WordFrequence.py生成的单词表（all_words.json），并从iciba网上爬取注音
+>和解释，生成字典 dicts_from_iciba.json
+>4. GenEnglishBook.py 
+>(1) 读取crawl_dicts.py生成字典的 dicts_from_iciba.json, 读取英文阅读，生成英语书，
+
