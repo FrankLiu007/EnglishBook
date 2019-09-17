@@ -27,12 +27,13 @@ def lookup_word_all(word):
     # print(words_sound)
     # print(word_alps)
     for alp in word_alps:
+        print(alp)
         str_alp = str(alp.getText())
-        alp_info = str_alp.split(" ")
+        alp_info = str_alp.split("[")
         if len(alp_info) > 1:
-            words_alp[alp_info[0]] = alp_info[1]
+            words_alp[alp_info[0][:-1]] = "["+alp_info[1]
         else:
-            words_alp["英"] = alp_info[0]
+            words_alp["英"] = "["+alp_info[0]
     # print(words_alp)
     for each_property_mean in word_means:
         word_property = each_property_mean.select('span[class="prop"]')[0].get_text()
@@ -41,5 +42,5 @@ def lookup_word_all(word):
     return {"sound":words_sound,"alp":words_alp,"mean":words_dict,"word":word}
 
 
-print(lookup_word_all("mile"))
+print(lookup_word_all("snow-covered"))
 # lookup_word_all("sara")
