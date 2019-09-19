@@ -8,6 +8,8 @@ import datetime
 import nltk
 import json
 from docx.shared import RGBColor
+import difflib
+import glob
 
 
 def isAlpha(str1):
@@ -17,6 +19,7 @@ def isAlpha(str1):
         return False
 
 
+'''  本地查找字典，意义不大，因为网上爬取单词的量比较小，解释也更好，还有音标啥的
 def pharseLangdao(word):
     tt = word.split('\n')
     yinbiao = ''
@@ -64,18 +67,7 @@ def get_local_translation(dicts, word):  ##获取音标和翻译
         # print('dictItem=', dictItem)
         if (dictItem != 'no'):
             return pharseDictItem(dic[0], dictItem)
-
-
-## 获取英文文章的所有段落。get all paragraphs from an english reading
-# def get_paragraphs(path):
-#     with open(path, 'r', encoding='UTF-8') as f:
-#         paragraphs = []
-#         for ll in f.readlines():
-#             ll = ll.replace('\r', '').replace('\n', '')
-#
-#             paragraphs.append(re.findall(r'([a-zA-Z][^\.\?!]*[\.\?!])', ll))
-#
-#         return paragraphs
+'''
 
 
 ###副词转形容词
@@ -90,6 +82,12 @@ def adverb2adject(word):
         return [word]
     if not possible_adj:
         return [word]
+
+    nltk.edit_distance(word, possible_adj) / len(word)
+    ratio = difflib.SequenceMatcher(None, word, possible_adj).ratio()
+    if ratio < 0.5:  ###形容词和副词基本没关系，舍去
+        possible_adj = word
+
     return possible_adj
 
 
@@ -104,6 +102,10 @@ def get_basic_form(wd):
         result = wnl.lemmatize(word, 'v')
     elif tag.startswith("NN"):
         result = wnl.lemmatize(word, 'n')
+        if tag == "NNS" and result == word.lower():
+            pass  ####未来再解决这些问题
+        if tag == "NNPS" and result == word.lower():
+            pass  ####未来再解决这些问题
     elif tag.startswith('JJ'):
         result = wnl.lemmatize(word, 'a')
     elif tag.startswith("R"):
@@ -130,17 +132,6 @@ def find_word_index(vocabulary, word):
         if word in dd:
             index = dd[0]
     return index
-
-
-###获取音标-------
-def get_yinbiao(dicts, word):
-    if '英' in dicts[word.lower()]['yinbiao']:
-        yinbiao = dicts[word.lower()]['yinbiao']['英']
-    elif 'all' in dicts[word.lower()]['yinbiao']:
-        yinbiao = dicts[word.lower()]['yinbiao']['all']
-    else:
-        yinbiao = ''
-    return yinbiao
 
 
 def get_word_entry(word):
@@ -181,7 +172,7 @@ def find_entry_index(vocabulary, word):
     return index
 
 
-###generate vocabulary for one reading,
+###generate vocabulary for one reading, 包括高中词汇表和初中词汇表中的3音节及以上的词汇
 def generate_vocabulary(paragraphs, high_words, middle_words, dicts):
     vocabulary = {}
     vocabulary['high'] = []
@@ -201,22 +192,28 @@ def generate_vocabulary(paragraphs, high_words, middle_words, dicts):
                     continue
 
                 try:
+                    translation = dicts[basic_word]
                     translation = dicts[word]
                 except:
-                    print('单词：' + word + '  未收录！！')
+                    print('单词：' + basic_word + '  未收录！！')
                     vocabulary['blank'].append(word)
                     continue
-                if basic_word in high_words or word in high_words:
+                if basic_word in middle_words or word in middle_words:
+                    if syllable_count(word) >= 3:  ###初中英语中的困难词汇
+                        index = find_word_index(vocabulary['high'], word)
+                        if index == -1:
+                            high_index = high_index + 1
+                            vocabulary['high'].append((high_index, word, dicts[word]))
+                    continue
+                elif basic_word in high_words or word in high_words:
 
                     index = find_word_index(vocabulary['high'], word)
                     if index == -1:
                         high_index = high_index + 1
                         vocabulary['high'].append((high_index, word, dicts[word]))
 
-                elif basic_word in middle_words or word in middle_words:
-                    continue
                 else:
-                    print('超纲词:', word)
+                    print('超纲词:', word, basic_word)
                     index = find_word_index(vocabulary['extra'], word)
                     if index == -1:
                         extra_index = extra_index + 1
@@ -278,8 +275,7 @@ def format_translation(entry):
     ts = []
     translation = entry[2]['translation']
     for key in translation:
-
-        xx =  key + ' '.join(translation[key])
+        xx = key + ' '.join(translation[key])
         ts.append(xx)
     return ts
 
@@ -306,9 +302,10 @@ step 3:  生成带音标的文章
 '''
 
 
-def get_new_article(path, outPath, high_words, middle_words, dicts):
-    doc_src = docx.Document(path)
+def get_new_article(doc_src, high_words, middle_words, dicts):
+
     paragraphs = []
+    word_cout = 0
     for paragraph in doc_src.paragraphs:
         paragraphs.append(nltk.sent_tokenize(paragraph.text))
 
@@ -324,7 +321,7 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
     for entry in vocabulary['high']:
         p.add_run(str(entry[0]) + '. ')  ###这里可以设置样式
         p.add_run(entry[1])  ###这里可以设置样式
-        run = p.add_run(get_yinbiao2(entry) +' ')  ###这里可以设置样式
+        run = p.add_run(get_yinbiao2(entry) + ' ')  ###这里可以设置样式
         run.font.color.rgb = RGBColor(0x42, 0x24, 0xE9)
 
         r = p.add_run(format_translation(entry))  ###这里可以设置样式
@@ -334,9 +331,9 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
     p.add_run('超纲词汇').bold = True
     p = doc.add_paragraph()
     for entry in vocabulary['extra']:
-        p.add_run('x'+str(entry[0]) +'. ')  ###这里可以设置样式
+        p.add_run('x' + str(entry[0]) + '. ')  ###这里可以设置样式
         p.add_run(entry[1])  ###这里可以设置样式
-        p.add_run(get_yinbiao2(entry) +' ')  ###这里可以设置样式
+        p.add_run(get_yinbiao2(entry) + ' ')  ###这里可以设置样式
         run = p.add_run(format_translation(entry))  ###这里可以设置样式
         run.add_break()
 
@@ -352,9 +349,11 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
                 this_word = word[0]  # 原单词
                 word_tag = word[1]  ##词性
                 # print('word=', word)
-                if not isAlpha(basic_form):
+                if not isEnglishWord(basic_form):
                     p.add_run(this_word + ' ')  ##不相关，直接输出
                     continue
+                else:
+                    word_cout += 1
 
                 tt = get_word_category(vocabulary, this_word)
                 if tt == 'high':
@@ -372,12 +371,11 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
 
                     p.add_run(' ')
 
-
                 elif tt == 'extra':
-                    print('extra：', this_word)
+                    print('extra：', this_word, basic_form)
                     dd = p.add_run(this_word)
                     entry = get_entry(vocabulary['extra'], this_word)
-                    run = p.add_run('x'+str(entry[0]))  ##单词的序号
+                    run = p.add_run('x' + str(entry[0]))  ##单词的序号
                     run.font.color.rgb = RGBColor(0x42, 0x24, 0xE9)
                     run.font.superscript = True
 
@@ -390,9 +388,69 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
                 else:
                     dd = p.add_run(this_word + ' ')
 
-    doc.save(outPath)
+    return (doc, word_cout, vocabulary)
 
-    return doc
+
+##estimate difficulty of a reading through its vocabulary
+def evaluate_difficulty(doc_src, vocabulary, method):
+    '''
+    methods=1(Gunning Fog Index), 2(The Flesch Formula), 3(Power Sumner Kearl Formula)
+The Flesch Formula: （数值越大越容易）
+0-29 Very Difficult Post Graduate
+30-49 Difficult College
+50-59 Fairly Difficult High School
+60-69 Standard 8th to 9th grade
+70-79 Fairly Easy 7th grade
+80-89 Easy 5th to 6th grade
+90-100 Very Easy 4th to 5th grade
+    '''
+    paragraphs=[]
+    for paragraph in doc_src.paragraphs:
+        paragraphs.append(nltk.sent_tokenize(paragraph.text))
+    number_of_sentence=0
+    number_of_syllables=0
+    number_of_words=0
+    number_of_big_words=0
+    for paragraph in paragraphs:
+
+        number_of_sentence+=len(paragraph)
+
+        for sentence in paragraph:
+            ll = parse_sentence(sentence)
+            for word in ll:
+                if not isEnglishWord(word[-1]):
+                    continue
+                number_of_words+=1
+                syc=syllable_count(word[-1])
+                number_of_syllables+=syc
+                if syc>=3:
+                    number_of_big_words+=1
+
+                # if basic_word in middle_words or word in middle_words:
+                #     continue
+                # elif basic_word in high_words or word in high_words:
+                #
+                #     index = find_word_index(vocabulary['high'], word)
+                #     if index == -1:
+                #         high_index = high_index + 1
+                #         vocabulary['high'].append((high_index, word, dicts[word]))
+                #
+                # else:
+                #     print('超纲词:', word, basic_word)
+                #     index = find_word_index(vocabulary['extra'], word)
+                #     if index == -1:
+                #         extra_index = extra_index + 1
+                #         vocabulary['extra'].append((extra_index, word, dicts[word]))
+    ##if method==1:（越大越难）
+    difficulty1=number_of_words/number_of_sentence+number_of_big_words/number_of_words*100
+    difficulty1=difficulty1*0.4
+    ##elif method==2:(越大越容易)
+    difficulty2 = number_of_words / number_of_sentence*1.015+ number_of_syllables/number_of_words*84.6
+    difficulty2=206.835-difficulty2
+    ##elif method==3:（越大越难）
+    difficulty3=number_of_words / number_of_sentence*.0778+0.0455*number_of_syllables
+
+    return (difficulty1, difficulty2, difficulty3)
 
 
 ####-------------------main-------------------
@@ -409,55 +467,46 @@ def get_new_article(path, outPath, high_words, middle_words, dicts):
 #         print(word)
 #         high_wordset.remove(word)
 # -------------------------------------------------
-if __name__ == "__main__":
-    with open('高考/初中词汇.json', 'r', encoding='utf-8') as f:
-        middle_words = json.load(f)
-    with open('高考/高中词汇.json', 'r', encoding='utf-8') as f:
-        high_words = json.load(f)
+##计算单词的音节数
+def syllable_count(word):
+    word = word.lower()
+    count = 0
+    vowels = "aeiouy"
+    if word[0] in vowels:
+        count += 1
+    for index in range(1, len(word)):
+        if word[index] in vowels and word[index - 1] not in vowels:
+            count += 1
+    if word.endswith("e"):
+        count -= 1
+    if count == 0:
+        count += 1
+    return count
 
+
+if __name__ == "__main__":
+    with open('高考/初中词_基础词.json', 'r', encoding='utf-8') as f:
+        middle_words = json.load(f)
+    with open('高考/高中词汇2.json', 'r', encoding='utf-8') as f:
+        high_words = json.load(f)
     with open('dicts_from_iciba.json', 'r', encoding='utf-8') as f:
         dicts = json.load(f)
 
-    path = '高考/高考英语阅读1.docx'
-    outPath = '高考/abc.docx'
-    get_new_article(path, outPath, high_words, middle_words, dicts)
+    path_list = glob.glob('高考/提取的文章/*/*.docx')
+    result = []
 
-#
-# def processArticle(path, out_path, high_words, middle_words, dicts):
-#
-#     doc_src = docx.Document(path)
-#     paragraphs = []
-#     for paragraph in doc_src.paragraphs:
-#         paragraphs.append(nltk.sent_tokenize(paragraph.text))
-#     # paragraphs = get_paragraphs(path)
-#     new_paragraphs = []
-#     vocabulary = []
-#     i = 1
-#     for paragraph in paragraphs:
-#         new_paragraph = []
-#         for sentence in paragraph:
-#             if len(sentence) > 0:
-#                 result = processSentence2(sentence, dicts, high_words, middle_words, i, vocabulary)
-#                 new_paragraph.append(result[1])
-#
-#                 i = result[0]
-#
-#         new_paragraphs.append(new_paragraph.copy())
-#
-#     ##output to docx
-#     doc = docx.Document()
-#     for word in vocabulary:
-#         wd, yinbiao, translation = get_word_entry(word)
-#         text = str(word[0]) + '. ' + wd + yinbiao + ' '.join(translation)
-#         par = doc.add_paragraph(text)
-#
-#     par = ''
-#     for paragraph in new_paragraphs:
-#         par = '  '
-#         for sentence in paragraph:
-#             par = par + ' '.join(sentence)
-#         doc.add_paragraph(par)
-#
-#     doc.save(outPath)
-#
-#    return 0
+    for path in path_list:
+        doc_src=docx.Document(path)
+        doc, word_cout, vocabulary = get_new_article(doc_src, high_words, middle_words, dicts)
+
+        difficulty = evaluate_difficulty(doc_src, vocabulary, 2)
+
+        result.append((path, doc, word_cout, vocabulary, difficulty))
+
+
+
+    # path = '高考/高考英语阅读1.docx'
+    # outPath = '高考/abc.docx'
+    # doc_src = docx.Document(path)
+    # result=get_new_article(doc_src,  high_words, middle_words, dicts)
+

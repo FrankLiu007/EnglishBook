@@ -65,4 +65,4 @@ if __name__=='__main__':
     word_set=get_high_wordset('outHigh.txt')
     with open('高中词汇.json', 'w', encoding='utf-8') as f:
         import json
-        json.dump(list(word_set),f)
+        json.dump(list(word_set),f, sort_keys=True ,indent = 4, separators=(',', ': '))

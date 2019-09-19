@@ -20,7 +20,7 @@ import nltk
 def get_basic_form(wd):
     word=wd[0]
     tag=wd[1]
-    print('wd=', wd)
+    # print('wd=', wd)
     wnl = nltk.stem.WordNetLemmatizer()
     result=word
     if tag.startswith('VB'):
@@ -41,7 +41,7 @@ def parse_sentence(sentence):
 
     for word, tag in nltk.pos_tag(tokens):  ###
         bas=get_basic_form((word,tag))
-        result.append((word.lower(), tag, bas.lower()))
+        result.append( (word, tag, bas) )
 
     return result
 
@@ -146,8 +146,18 @@ def count_word_frequence(docs):
 
     return words
 
-###
+###是否为单词(仅仅是由英文单词和-组成)
+def isEnglishWord(word):
+   if  re.match(r'^[a-zA-Z][a-zA-Z\-]*[a-zA-Z]$', word):
+       return True
+   else:
+       if word=='I' or word=='a':
+           return True
+       else:
+            return False
+
 ##--第2种方法：  处理一个句子，  count_word_frequence函数太长，就把它移除来
+
 def process_sentence2(sentence, words):
     ''' words 的格式
     {
@@ -160,21 +170,27 @@ def process_sentence2(sentence, words):
     }
     '''
     ll =parse_sentence(sentence)
+
+    ###每个句子开头的单词，如果不是 专有名词 或者不是I，应该变小写
+    if not ll[0][1].startswith('NNP') and ll[0][0]!='I' :
+        ll[0]=(ll[0][0].lower(), ll[0][1])
+
     # print('ll=', ll)
     for word in ll:
-        basic_form = word[-1]   ####wd是单词的基础型
-        this_word=word[0].lower()       #原单词
-        word_tag=word[1]    ##词性
-        if not basic_form.isalpha():
+        if not isEnglishWord(word[0]):
             continue
+        basic_form = word[-1]  ####wd是单词的基础型
+        this_word = word[0]  # 原单词
+        word_tag = word[1]  ##词性
+
         if basic_form in words:  ###该单词出现过
             words[basic_form]['freqs']+=1  ##总频率加1
 
-            if word[1] in words[basic_form]:  ##该单词的该词性出现过
-                words[basic_form][word[1]][1] += 1  ###频率加1
-                words[basic_form][word[1]][2].append(sentence)
+            if word_tag in words[basic_form]:  ##该单词的该词性出现过
+                words[basic_form][word_tag][1] += 1  ###频率加1
+                words[basic_form][word_tag][2].append(sentence)
             else: ##该单词的该词性没出现过
-                words[basic_form][word[1]] = [word[0].lower(), 1, [sentence]]
+                words[basic_form][word_tag] = [this_word, 1, [sentence]]
         else: ###该单词从未出现过
             words[basic_form] = {'freqs':1,  word_tag:[this_word, 1, [sentence] ]}
 
